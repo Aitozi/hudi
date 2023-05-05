@@ -74,6 +74,8 @@ public class FlinkWriteHelper<T, R> extends BaseWriteHelper<T, List<HoodieRecord
       Instant lookupBegin = Instant.now();
       Duration indexLookupDuration = Duration.between(lookupBegin, Instant.now());
 
+      // 这里和父类实现不同就是去掉了lookup的过程，所以上面indexLookupDuration 也是空的，因为flink默认的已经在
+      // BucketAssignFunction 完成打标过程了
       HoodieWriteMetadata<List<WriteStatus>> result = executor.execute(inputRecords);
       result.setIndexLookupDuration(indexLookupDuration);
       return result;

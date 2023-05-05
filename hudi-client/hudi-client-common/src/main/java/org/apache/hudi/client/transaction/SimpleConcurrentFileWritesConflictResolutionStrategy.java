@@ -76,6 +76,7 @@ public class SimpleConcurrentFileWritesConflictResolutionStrategy
     Set<String> fileIdsSetForSecondInstant = otherOperation.getMutatedFileIds();
     Set<String> intersection = new HashSet<>(fileIdsSetForFirstInstant);
     intersection.retainAll(fileIdsSetForSecondInstant);
+    // 如果两次commit的文件id有交集，则是有冲突的
     if (!intersection.isEmpty()) {
       LOG.info("Found conflicting writes between first operation = " + thisOperation
           + ", second operation = " + otherOperation + " , intersecting file ids " + intersection);

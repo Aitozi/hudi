@@ -94,6 +94,7 @@ public class FileSystemBasedLockProvider implements LockProvider<String>, Serial
     try {
       synchronized (LOCK_FILE_NAME) {
         // Check whether lock is already expired, if so try to delete lock file
+        // 先检查lock file 是否存在，默认路径是 base/.hoodie/lock 也就是所有的commit操作都会操作这个文件
         if (fs.exists(this.lockFile)) {
           if (checkIfExpired()) {
             fs.delete(this.lockFile, true);
@@ -103,10 +104,12 @@ public class FileSystemBasedLockProvider implements LockProvider<String>, Serial
             return false;
           }
         }
+        // 如果文件不存在，则获取锁，创建文件
         acquireLock();
         return fs.exists(this.lockFile);
       }
     } catch (IOException | HoodieIOException e) {
+      // 创建时可能会发生失败，则返回false获取锁失败
       LOG.info(generateLogStatement(LockState.FAILED_TO_ACQUIRE), e);
       return false;
     }

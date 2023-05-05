@@ -176,12 +176,15 @@ public class BucketAssignFunction<K, I, O extends HoodieRecord<?>>
     // Only changing records need looking up the index for the location,
     // append only records are always recognized as INSERT.
     HoodieRecordGlobalLocation oldLoc = indexState.value();
+    // change records 表示会更改数据的写入类型如update，delete
     if (isChangingRecords && oldLoc != null) {
       // Set up the instant time as "U" to mark the bucket as an update bucket.
+      // 打标之后如果partition 发生变化了，例如partition 字段发生了变化 ? 状态中存储的就是这个数据应该存放的location
       if (!Objects.equals(oldLoc.getPartitionPath(), partitionPath)) {
         if (globalIndex) {
           // if partition path changes, emit a delete record for old partition path,
           // then update the index state using location with new partition path.
+          // 对于全局索引，需要先删除老的分区的数据，非全局索引不做跨分区的改动
           HoodieRecord<?> deleteRecord = new HoodieAvroRecord<>(new HoodieKey(recordKey, oldLoc.getPartitionPath()),
               payloadCreation.createDeletePayload((BaseAvroPayload) record.getData()));
 

@@ -180,11 +180,13 @@ public abstract class BaseCommitActionExecutor<T, I, K, O, R>
   protected void autoCommit(Option<Map<String, String>> extraMetadata, HoodieWriteMetadata<O> result) {
     final Option<HoodieInstant> inflightInstant = Option.of(new HoodieInstant(State.INFLIGHT,
         getCommitActionType(), instantTime));
+    // 开始事务，如果是occ并发模型，会获取锁
     this.txnManager.beginTransaction(inflightInstant,
         lastCompletedTxn.isPresent() ? Option.of(lastCompletedTxn.get().getLeft()) : Option.empty());
     try {
       setCommitMetadata(result);
       // reload active timeline so as to get all updates after current transaction have started. hence setting last arg to true.
+      // 尝试解冲突，冲突判定的策略是可插拔的，默认是变更的文件粒度查看是否有交集. 目前冲突的文件更改是无法处理的，会终止commit请求
       TransactionUtils.resolveWriteConflictIfAny(table, this.txnManager.getCurrentTransactionOwner(),
           result.getCommitMetadata(), config, this.txnManager.getLastCompletedTransactionOwner(), true, pendingInflightAndRequestedInstants);
       commit(extraMetadata, result);
